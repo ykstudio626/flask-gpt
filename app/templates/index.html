@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>chatGPT Clone</title>
+    </head>
+    <style type="text/css">
+        body{
+            margin: 0;
+            background-color: #333;
+        }
+        *{
+            box-sizing: border-box;
+        }
+        .main{
+            margin:0px auto;
+            width:90%;
+            max-width:800px;
+            height:100vh;
+        }
+        .chatControl{
+            height: 70px;
+            padding:15px;
+            margin:0;
+            background-color:#ccc;
+        }
+        #chatArea{
+            height: calc(100vh - 95px);
+            overflow-x:hidden;
+            overflow-y:auto;
+            padding:0px;
+            background-color:#eee;
+            font-size:15px;
+            line-height:22px;
+            color:#393939;
+            white-space: break-spaces;
+        }
+        .answer{
+            padding: 15px;
+        }
+        .question{
+            background-color: rgb(135 202 234);
+            padding: 15px;
+        }
+        #chatInfo{
+            width: 100%;
+            height: 25px;
+            line-height: 25px;
+            box-sizing: border-box;
+            padding-left: 10px;
+            color: #1836cd;
+            background-color: #e3dfdf;
+        }
+        #chatText{
+            width:85%;
+            height:40px;
+            line-height:40px;
+            display: inline-flex;
+            vertical-align:middle;
+            padding:5px;
+        }
+        #submitBtn{
+            display: inline-flex;
+            padding:10px 20px;
+            vertical-align:middle;
+        }
+
+    </style>
+    <body>
+        <div class="main">
+
+            <div id="chatArea"></div>
+            <div id="chatInfo"></div>
+            <div class="chatControl">
+                <input type="text" id="chatText" placeholder="質問を入力してください.." />
+                <input type="button" value="Submit" id="submitBtn" />
+            </div>
+            
+            
+        </div>
+    </body>
+
+    <script language="javascript">
+
+            var chatTextInput = document.getElementById("chatText")
+            var submitBtn = document.getElementById("submitBtn")
+            var chatArea = document.getElementById("chatArea")
+            var chatInfo = document.getElementById("chatInfo")
+
+            var answerDiv = {}; // 動的に生成される回答の入れ物
+            var questionDiv = {}; // 動的に生成される質問の入れ物
+
+            // エンターキーが押された時の動作
+            chatTextInput.onkeypress = (e) => {
+                if(e.keyCode==13){
+                    document.getElementById("submitBtn").click()
+                    return false;
+                }
+            }
+
+            chatTextInput.focus();
+
+            submitBtn.onclick = (e)=>{
+                questionDiv = document.createElement("div");
+                questionDiv.id = "question-" + Math.floor(Math.random()*1000000);
+                questionDiv.classList.add("question");
+                questionDiv.innerHTML = chatTextInput.value;
+                chatArea.appendChild(questionDiv);
+
+                submitBtn.setAttribute("disabled",true)
+                submitBtn.value = "...."
+
+                if(chatTextInput.value == ''){
+                    chatArea.innerHTML = "質問を入力してください.."
+                    submitBtn.removeAttribute("disabled");
+                    submitBtn.value = "送信";
+                    chatTextInput.focus();
+                    return;
+                }
+
+                var firstMessage = true;
+                
+                chatInfo.innerHTML = "I am thinking...";
+
+                var source = new EventSource("/ask?question="+chatTextInput.value);
+
+                // SSEが切断された時の処理  
+                source.onerror = () => {
+                    console.log('SSE disconnected!');
+                    source.close();
+                };
+
+                // メッセージ受信処理
+                source.addEventListener("message", function(event){
+
+                    if (firstMessage === true){ // 最初のメッセージが入って来たら
+                        firstMessage = false;
+                        chatInfo.innerHTML = "";
+                        answerDiv = document.createElement('div');
+                        answerDiv.id = "answer-" + Math.floor(Math.random()*1000000);
+                        answerDiv.classList.add("answer");
+                        chatArea.appendChild(answerDiv);
+                    }
+
+                    if(event.data == "[DONE]"){ // 回答が終了した場合
+                        submitBtn.removeAttribute("disabled");
+                        submitBtn.value = "送信";
+                        chatTextInput.value = "";
+                        chatTextInput.focus();
+                        source.close();
+                    }else{ // 回答エリアに追記する
+                        console.log(event)
+                        console.log('***'+event.data+'***')
+                        answerDiv.insertAdjacentHTML("beforeend", decodeURI(event.data))
+                        if(chatArea.scrollHeight > chatArea.clientHeight){ // 一番下までスクロール
+                            chatArea.scrollTo(0, chatArea.scrollHeight)
+                        }
+                        
+                    }
+                });
+            }
+
+    </script>
+</html>
