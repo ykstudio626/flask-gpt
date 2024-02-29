@@ -4,9 +4,23 @@ services:
   flask:
     build: .
     ports:
-      - "8081:8081"
+      - "8082:8081"
     container_name: flask
     volumes:
       - ./app:/app
+    environment:
+      MONGO_USERNAME: chatuser
+      MONGO_PASSWORD: password
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    container_name: mongodb
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: chat
 
 

@@ -72,7 +72,7 @@
             <div id="chatInfo"></div>
             <div class="chatControl">
                 <input type="text" id="chatText" placeholder="質問を入力してください.." />
-                <input type="button" value="Submit" id="submitBtn" />
+                <input type="button" value="送信" id="submitBtn" />
             </div>
             
             
@@ -88,6 +88,8 @@
 
             var answerDiv = {}; // 動的に生成される回答の入れ物
             var questionDiv = {}; // 動的に生成される質問の入れ物
+
+            var answer = "" // 回答
 
             // エンターキーが押された時の動作
             chatTextInput.onkeypress = (e) => {
@@ -147,6 +149,7 @@
                         chatTextInput.value = "";
                         chatTextInput.focus();
                         source.close();
+                        answer = answerDiv.innerText
                     }else{ // 回答エリアに追記する
                         console.log(event)
                         console.log('***'+event.data+'***')
